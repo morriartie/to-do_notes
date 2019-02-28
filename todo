@@ -1,0 +1,184 @@
+#!/usr/bin/python3
+from termcolor import colored as clrd
+from random import randint
+from time import sleep
+import datetime as dt
+import argparse
+import json
+import os
+
+COLOR = True
+path = '.'
+data = f'{path}/todo_data.json'
+
+
+def colored(text,color):
+    if COLOR:
+        return clrd(text,color)
+    else:
+        return text
+
+def time_from_now(strtime):
+    f = '%Y-%m-%d %H:%M:%S'
+    print("time: {}".format(strftime))
+    #time = dt.datetime.strptime(strtime,f)
+
+class Todo_Queue():
+    def __init__(self,path):
+        self.data = []
+        self.path = path
+    #
+    def load(self):
+        print("loading from {} ...".format(self.path))
+        try:
+            self.data = json.loads(open(self.path).read())
+        except:
+            print(f"no data saved at {self.path}, creating new")
+            randn = str(randint(1,10))
+            if os.path.exists(self.path):
+                bkp_name = self.path.replace('.json','_bkp{}.json'.format(randn))
+                os.rename(self.path,bkp_name)                
+            else:
+                self.save()
+    #
+    def save(self):
+        print("saving at {} ...".format(self.path))
+        open(self.path,'w').write(json.dumps(self.data))
+    #
+    def insert(self, param):
+        timestamp = str(dt.datetime.now())
+        self.data.append([0,param,timestamp])
+    #
+    def remove(self):
+        print("remove: ")
+        for i,v in enumerate(self.data):
+            box = ["[ ]","[X]"][int(v[0])] 
+            print("{} - {} {}".format(i,v[1],box))
+        index = int(input("(index) >> "))
+        self.data = [v for i,v in enumerate(self.data) if i!=index]
+    #
+    def check(self):
+        print("check: ")
+        for i,v in enumerate(self.data):
+            box = ["[ ]","[X]"][int(v[0])] 
+            print("{} - {} {}".format(i,v[1],box))
+        index = int(input("(index) >> "))
+        self.data[index][0] = 1
+    #
+    def uncheck(self):
+        print("uncheck: ")
+        for i,v in enumerate(self.data):
+            box = ["[ ]","[X]"][int(v[0])] 
+            print("{} - {} {}".format(i,v[1],box))
+        index = int(input("(index) >> "))
+        self.data[index][0] = 0
+    #
+    def list(self):
+        print("\nlist: ")
+        spacing = max([len(s[1]) for s in self.data])+2+9
+        for check,string,date in self.data:
+            timethen = dt.datetime.strptime(date.split('.')[0],'%Y-%m-%d %H:%M:%S')
+            timenow = dt.datetime.now()
+            time_diff = (timenow-timethen).total_seconds()
+            total_secs = time_diff
+            #
+            day = 60*60*24
+            hour = 60*60
+            minute = 60
+            #
+            if time_diff>=day:
+                time_diff = time_diff//day
+                unit = ["day","days"][(time_diff%(day))>=2]
+            elif time_diff>hour:
+                time_diff = time_diff//hour
+                unit = ["hour","hours"][(time_diff%(hour))>=2]
+            elif time_diff>minute:
+                time_diff = time_diff//minute
+                unit = ["minute","minutes"][(time_diff%(minute))>=2]
+            else:
+                time_diff = int(time_diff)
+                unit = ["second","seconds"][time_diff>=2]
+            box = ["[ ]","[X]"][check]
+            #
+            timespace = "({} {} ago)".format(int(time_diff),unit)
+            if box=='[ ]':
+                if 'day' in unit:
+                    box = colored(box,'red')
+                    timespace = colored(timespace,'red')
+                elif 'hour' in unit:
+                    box = colored(box,'yellow')
+                    timespace = colored(timespace,'yellow')
+                elif 'minute' in unit:
+                    box = colored(box,'cyan')
+                    timespace = colored(timespace,'cyan')
+                else:
+                    box = colored(box,'blue')
+                    timespace = colored(timespace,'blue')
+                string = colored(string,'white')
+            else:
+                box = colored(box,'green')
+                timespace = colored(timespace,'green')
+                string = colored(string,'green')
+            print("{} {: <{spc}} {}".format(box,string,timespace,spc=spacing))
+
+
+if __name__=='__main__':
+    ########
+    # args #
+    ########
+    parser = argparse.ArgumentParser(description='todo list')
+    parser.add_argument('-i','--insert', type=str, help='insert a todo')
+    parser.add_argument('-w','--watch', type=int, help='live mode')
+    parser.add_argument('-r','--remove', const=True, nargs='?', help='remove an item')
+    parser.add_argument('-c','--check', const=True, nargs='?', help='check an item')
+    parser.add_argument('-u','--uncheck', const=True, nargs='?', help='uncheck an item')
+    parser.add_argument('-ls','--list', const=True, nargs='?', help='list todo')
+    parser.add_argument('-nc','--no-color', const=True, nargs='?', help='no fancy colors')
+    args = parser.parse_args()
+    #
+    if args.no_color:
+        COLOR = False
+    #
+    tq = Todo_Queue(data)
+    tq.load()
+    ##################
+    # first use case #
+    ##################
+    if not tq.data:
+        ins = input("\nnothing to show\n\nadd a todo:")
+        tq.insert(ins)
+        tq.save()
+    ################
+    # standard use #
+    ################
+    if not any([vars(args)[v] for v in vars(args) if v!='no_color']): # if all inputs are none
+        tq.list()
+    ##########
+    # params #
+    ##########
+    if args.insert:
+        tq.insert(args.insert)
+        tq.save()
+    if args.remove:
+        tq.remove()
+        tq.save()
+    
+    if args.check:
+        tq.check()
+        tq.save()
+    
+    if args.uncheck:
+        tq.uncheck()
+        tq.save()
+    
+    if args.list:
+        tq.list()
+    
+    if args.watch:
+        while 1:
+            print("\n"*999)
+            tq.load()
+            tq.list()
+            sleep(args.watch)
+    
+
