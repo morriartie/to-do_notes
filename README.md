@@ -1,13 +1,18 @@
 1 - edit the path on todo
+
 2 - chmod +x todo
+
 3 - ./todo -h
+
 
 example:
 
 ./todo -i "pet the dog"
 
+
 checking:
 ./todo -c
+
 
 suggestion:
 
