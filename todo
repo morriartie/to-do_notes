@@ -23,6 +23,20 @@ def time_from_now(strtime):
     print("time: {}".format(strftime))
     #time = dt.datetime.strptime(strtime,f)
 
+class Stats():
+    def __init__(self):
+        self.data = {'checks':[], 'creations':[]}
+        self.path = path
+
+    def add_check(self, text):
+        pass
+    def add_uncheck(self, text):
+        pass
+    def add_creation(self, text):
+        pass
+    def add_removal(self, text):
+        pass
+
 class Todo_Queue():
     def __init__(self,path):
         self.data = []
@@ -54,24 +68,26 @@ class Todo_Queue():
         for i,v in enumerate(self.data):
             box = ["[ ]","[X]"][int(v[0])] 
             print("{} - {} {}".format(i,v[1],box))
-        index = int(input("(index) >> "))
-        self.data = [v for i,v in enumerate(self.data) if i!=index]
+        index = [int(v) for v in input("(index) >> ").split()]
+        self.data = [v for i,v in enumerate(self.data) if i not in index]
     #
     def check(self):
         print("check: ")
         for i,v in enumerate(self.data):
             box = ["[ ]","[X]"][int(v[0])] 
             print("{} - {} {}".format(i,v[1],box))
-        index = int(input("(index) >> "))
-        self.data[index][0] = 1
+        index = [int(v) for v in input("(index) >> ").split()]
+        for v in index:
+            self.data[v][0] = 1
     #
     def uncheck(self):
         print("uncheck: ")
         for i,v in enumerate(self.data):
             box = ["[ ]","[X]"][int(v[0])] 
             print("{} - {} {}".format(i,v[1],box))
-        index = int(input("(index) >> "))
-        self.data[index][0] = 0
+        index = [int(v) for v in input("(index) >> ").split()]
+        for v in index:
+            self.data[v][0] = 0
     #
     def list(self):
         print("\nlist: ")
